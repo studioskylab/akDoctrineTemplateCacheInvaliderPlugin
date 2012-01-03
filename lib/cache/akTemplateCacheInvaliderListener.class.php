@@ -147,11 +147,18 @@ class akTemplateCacheInvaliderListener extends Doctrine_Record_Listener
   {
     $currentApplication = sfConfig::get('sf_app');
 
+    // make sure we use the correct context class if it's been extended
+    if (sfContext::hasInstance() && is_object($context = sfContext::getInstance())) {
+      $contextClass = get_class($context);
+    } else {
+      $contextClass = 'sfContext';
+    }
+
     if ($switchRequired = !is_null($targetApplication) && $targetApplication !== $currentApplication)
     {
       try
       {
-        sfContext::switchTo($targetApplication);
+        $contextClass::switchTo($targetApplication);
       }
       catch (Exception $e)
       {
@@ -160,7 +167,7 @@ class akTemplateCacheInvaliderListener extends Doctrine_Record_Listener
         return;
       }
 
-      $viewCacheManager = sfContext::getInstance()->getViewCacheManager();
+      $viewCacheManager = $contextClass::getInstance()->getViewCacheManager();
     }
     else
     {
@@ -196,7 +203,7 @@ class akTemplateCacheInvaliderListener extends Doctrine_Record_Listener
 
     if ($switchRequired)
     {
-      sfContext::switchTo($currentApplication);
+      $contextClass::switchTo($currentApplication);
     }
 
     if (!is_null($error))
